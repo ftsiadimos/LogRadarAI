@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - LogAI Monitor{% endblock %}
+{% block header_title %}Settings{% endblock %}
+
+{% block content %}
+<form id="settingsForm" onsubmit="event.preventDefault(); saveSettings();">
+    <!-- Telegram Settings -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fab fa-telegram"></i> Telegram Notifications</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="telegramEnabled">
+                    <span>Enable Telegram notifications</span>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="telegramBotToken">Bot Token</label>
+                <input type="password" class="form-control" id="telegramBotToken" 
+                       placeholder="Enter your Telegram bot token">
+                <small style="color: #666;">Get a token from @BotFather on Telegram</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="telegramChatId">Chat ID</label>
+                <input type="text" class="form-control" id="telegramChatId" 
+                       placeholder="Enter your Telegram chat ID">
+                <small style="color: #666;">Your personal chat ID or group ID where alerts will be sent</small>
+            </div>
+            
+            <button type="button" class="btn btn-outline" id="testTelegramBtn" onclick="testTelegram()">
+                <i class="fab fa-telegram"></i> Test Connection
+            </button>
+        </div>
+    </div>
+    
+    <!-- Ollama Settings -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-brain"></i> Ollama AI Settings</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="ollamaEnabled" checked>
+                    <span>Enable AI analysis</span>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="ollamaHost">Ollama Host</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" class="form-control" id="ollamaHost" 
+                           value="http://localhost:11434" placeholder="http://localhost:11434"
+                           style="flex: 1;">
+                    <button type="button" class="btn btn-outline" onclick="loadOllamaModels(null, true)">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+                <div id="ollamaConnectionStatus" class="status-indicator" style="margin-top: 0.5rem;">
+                    <span class="status-dot warning"></span> Checking connection...
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="ollamaModel">Model</label>
+                <select class="form-control form-select" id="ollamaModel">
+                    <option value="">Loading models...</option>
+                </select>
+                <small style="color: #666;">Available models are loaded from your Ollama instance</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="autoAnalyze" checked>
+                    <span>Automatically analyze logs periodically</span>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="analysisInterval">Analysis Interval (seconds)</label>
+                <input type="number" class="form-control" id="analysisInterval" value="300" min="60">
+                <small style="color: #666;">How often to run automatic batch analysis</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- UI Theme Settings -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-palette"></i> UI Theme</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label" for="uiTheme">Select Theme</label>
+                <select class="form-control form-select" id="uiTheme" onchange="previewTheme(this.value)">
+                    <option value="default">Default (Light)</option>
+                    <option value="terminal">Terminal (Dark/Green)</option>
+                </select>
+                <small style="color: #666;">Changes the appearance of the content area. The sidebar menu stays the same.</small>
+            </div>
+            <div id="themePreview" class="theme-preview" style="margin-top: 1rem; padding: 1rem; border-radius: 8px; display: none;">
+                <strong>Preview:</strong> Theme will be applied after saving.
+            </div>
+            
+            <div class="form-group" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                <label class="form-label">Keyboard Shortcuts</label>
+                <button type="button" class="btn btn-outline" onclick="showShortcutsHelp()">
+                    <i class="fas fa-keyboard"></i> View Keyboard Shortcuts
+                </button>
+                <small style="color: #666; display: block; margin-top: 0.5rem;">Press <kbd style="background: #f4f5f7; padding: 2px 6px; border-radius: 3px; border: 1px solid #ddd;">?</kbd> anywhere to view shortcuts</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- General Settings -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-cog"></i> General Settings</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label" for="logRetention">Log Retention (hours)</label>
+                <input type="number" class="form-control" id="logRetention" value="168" min="1">
+                <small style="color: #666;">How long to keep logs (168 hours = 7 days)</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="hideDuplicatesDefault">
+                    <span>Hide duplicate messages by default</span>
+                </label>
+                <small style="color: #666;">Automatically hide repeated log messages from the same host on Dashboard and Logs pages</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Button -->
+    <div style="margin-top: 1rem;">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Settings
+        </button>
+    </div>
+</form>
+
+<!-- Syslog Client Diagnostics -->
+<div class="card" style="margin-top: 1.5rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3><i class="fas fa-stethoscope"></i> Syslog Client Diagnostics</h3>
+        <div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="sendTestSyslog()" title="Send a test syslog message">
+                <i class="fas fa-paper-plane"></i> Send Test
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="loadSyslogDiagnostics()" title="Refresh diagnostics">
+                <i class="fas fa-sync"></i> Refresh
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="syslogDiagnosticsLoading" style="text-align: center; padding: 2rem;">
+            <i class="fas fa-spinner fa-spin"></i> Loading diagnostics...
+        </div>
+        <div id="syslogDiagnosticsContent" style="display: none;">
+            <!-- Port Conflict Warning -->
+            <div id="portConflictWarning" class="alert alert-warning" style="display: none; margin-bottom: 1rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;">
+                <i class="fas fa-exclamation-triangle" style="color: #856404;"></i>
+                <strong>Port Conflict Detected!</strong>
+                <span id="portConflictMessage"></span>
+                <br><small>If running Flask with debug mode, try: <code>flask run --no-reload</code></small>
+            </div>
+            
+            <!-- Receiver Status -->
+            <div class="diagnostics-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                <div class="stat-item">
+                    <span class="stat-label" style="color: #666; font-size: 0.85rem;">Receiver Status</span>
+                    <span class="stat-value" id="receiverStatus" style="font-weight: 600;">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" style="color: #666; font-size: 0.85rem;">Uptime</span>
+                    <span class="stat-value" id="receiverUptime" style="font-weight: 600;">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" style="color: #666; font-size: 0.85rem;">UDP Port</span>
+                    <span class="stat-value" id="udpPort" style="font-weight: 600;">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" style="color: #666; font-size: 0.85rem;">TCP Port</span>
+                    <span class="stat-value" id="tcpPort" style="font-weight: 600;">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" style="color: #666; font-size: 0.85rem;">Total Clients</span>
+                    <span class="stat-value" id="totalClients" style="font-weight: 600;">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" style="color: #666; font-size: 0.85rem;">Active Now</span>
+                    <span class="stat-value" id="activeClients" style="font-weight: 600;">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label" style="color: #666; font-size: 0.85rem;">With Issues</span>
+                    <span class="stat-value" id="clientsWithIssues" style="font-weight: 600; color: #dc3545;">--</span>
+                </div>
+            </div>
+            
+            <!-- Client List -->
+            <h4 style="margin-bottom: 1rem;"><i class="fas fa-server"></i> Connected Clients</h4>
+            <div id="noClientsMessage" style="display: none; text-align: center; padding: 2rem; color: #666;">
+                <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                <p>No syslog clients have connected yet.</p>
+                <small>Configure your servers to send syslogs to this instance.</small>
+            </div>
+            <div id="clientsTable" style="display: none; overflow-x: auto;">
+                <table class="data-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Hostname / IP</th>
+                            <th>Protocol</th>
+                            <th>Messages</th>
+                            <th>Rate</th>
+                            <th>Last Activity</th>
+                            <th>Issues</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="syslogDiagnosticsError" style="display: none; text-align: center; padding: 2rem; color: #dc3545;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+            <p id="syslogDiagnosticsErrorMsg">Failed to load diagnostics</p>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Guide -->
+<div class="card" style="margin-top: 1.5rem;">
+    <div class="card-header">
+        <h3><i class="fas fa-book"></i> Configuration Guide</h3>
+    </div>
+    <div class="card-body">
+        <h4>Setting up Telegram Notifications</h4>
+        <ol>
+            <li>Open Telegram and search for <code>@BotFather</code></li>
+            <li>Send <code>/newbot</code> and follow the instructions to create a bot</li>
+            <li>Copy the bot token and paste it above</li>
+            <li>To get your Chat ID:
+                <ul>
+                    <li>Send a message to your bot</li>
+                    <li>Visit <code>https://api.telegram.org/bot&lt;YOUR_TOKEN&gt;/getUpdates</code></li>
+                    <li>Find the <code>chat.id</code> in the response</li>
+                </ul>
+            </li>
+            <li>Click "Test Connection" to verify</li>
+        </ol>
+        
+        <h4 style="margin-top: 1.5rem;">Setting up Ollama</h4>
+        <ol>
+            <li>Install Ollama from <a href="https://ollama.ai" target="_blank">ollama.ai</a></li>
+            <li>Run: <code>ollama pull llama3.2</code></li>
+            <li>Start Ollama: <code>ollama serve</code></li>
+            <li>Verify it's running at <code>http://localhost:11434</code></li>
+        </ol>
+        
+        <h4 style="margin-top: 1.5rem;">Rsyslog Configuration</h4>
+        <p>Add this to your rsyslog configuration to send logs to LogAI Monitor:</p>
+        <pre>
+# /etc/rsyslog.d/99-logaimonitor.conf
+*.* @logaimonitor-host:5514  # UDP
+# OR
+*.* @@logaimonitor-host:5515 # TCP
+        </pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Settings page loaded via SPA router which calls loadSettings() -->
+{% endblock %}

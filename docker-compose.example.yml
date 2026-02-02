@@ -1,0 +1,72 @@
+version: '3.8'
+services:
+  logaimonitor:
+    image: ftsiadimos/logradaraiq
+    container_name: logaimonitor
+    restart: unless-stopped
+    ports:
+      - "5059:5059"      # Web UI
+      - "5514:5514/udp"  # Syslog UDP
+      - "5515:5515/tcp"  # Syslog TCP
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - LOG_RETENTION_HOURS=${LOG_RETENTION_HOURS:-168}
+      - ANALYSIS_INTERVAL_SECONDS=${ANALYSIS_INTERVAL_SECONDS:-300}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - logaimonitor-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  redis:
+    image: redis:7-alpine
+    container_name: logaimonitor-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - logaimonitor-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Ollama service (uncomment if you want to run Ollama in Docker)
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: logaimonitor-ollama
+  #   restart: unless-stopped
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama-data:/root/.ollama
+  #   networks:
+  #     - logaimonitor-net
+  #   # GPU support (requires nvidia-docker)
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - driver: nvidia
+  #   #           count: 1
+  #   #           capabilities: [gpu]
+
+volumes:
+  redis-data:
+  # ollama-data:
+
+networks:
+  logaimonitor-net:
+    driver: bridge
