@@ -82,6 +82,7 @@ cd logaimonitor
 ```bash
 docker-compose up -d
 ```
+Default Credentials: Username: admin / Password: admin
 
 Example `docker-compose` (use the included `docker-compose.example.yml` or drop it into your project root as `docker-compose.yml`):
 
