@@ -139,6 +139,20 @@
         </div>
     </div>
     
+    <!-- Log Database -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-database"></i> Log Database</h3>
+        </div>
+        <div class="card-body">
+            <button type="button" class="btn btn-danger" onclick="clearAllLogs()">
+                <i class="fas fa-trash-alt"></i> Clear All Logs
+            </button>
+            <small style="color: #a00; display: block; margin-top: 0.5rem;">Warning: This will permanently delete all logs from the database.</small>
+            <small style="color: #666; display: block; margin-top: 0.25rem;">Note: It may take a few moments for the dashboard and counts to reflect the change.</small>
+        </div>
+    </div>
+
     <!-- Save Button -->
     <div style="margin-top: 1rem;">
         <button type="submit" class="btn btn-primary">
@@ -280,4 +294,24 @@
 
 {% block scripts %}
 <!-- Settings page loaded via SPA router which calls loadSettings() -->
+<script>
+async function clearAllLogs() {
+    if (!confirm('Are you sure you want to delete ALL logs from the database? This action cannot be undone.')) return;
+    try {
+        const response = await fetch('/api/logs/clear', {
+            method: 'POST'
+        });
+        if (response.ok) {
+            const data = await response.json();
+            showToast('Success', `Deleted ${data.deleted} logs`, 'success');
+            try { fetchStats(); } catch(e) {}
+        } else {
+            showToast('Error', 'Failed to clear logs', 'error');
+        }
+    } catch (error) {
+        console.error('Error clearing logs:', error);
+        showToast('Error', 'Failed to clear logs', 'error');
+    }
+}
+</script>
 {% endblock %}

@@ -544,6 +544,14 @@ def api_log_detail(log_id):
         return jsonify({'error': 'Log not found'}), 404
     return jsonify(log)
 
+# Clear all logs API
+@app.route('/api/logs/clear', methods=['POST'])
+@require_redis_api
+def api_clear_all_logs():
+    """Delete all logs from the database"""
+    count = redis_client.clear_all_logs()
+    return jsonify({'status': 'ok', 'deleted': count})
+
 @app.route('/api/logs/ingest', methods=['POST'])
 @require_redis_api
 def api_ingest_log():

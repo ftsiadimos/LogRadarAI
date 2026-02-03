@@ -175,6 +175,34 @@ class RedisClient:
         
         return len(old_logs)
     
+    def clear_all_logs(self) -> int:
+        """Delete all logs from the database"""
+        log_ids = self.client.zrange('logs:timeline', 0, -1)
+        count = 0
+        for log_id in log_ids:
+            log = self.get_log(log_id)
+            if log:
+                source = log.get('source', 'unknown')
+                severity = log.get('severity', 'info')
+                hostname = log.get('hostname', log.get('source', 'unknown'))
+                # Remove from indexes
+                self.client.srem(f'logs:source:{source}', log_id)
+                self.client.srem(f'logs:severity:{severity}', log_id)
+                self.client.srem(f'logs:host:{hostname}', log_id)
+            # Delete the log hash and increment counter
+            self.client.delete(log_id)
+            count += 1
+        # Remove timeline
+        self.client.delete('logs:timeline')
+        # Clean up index sets
+        for key in self.client.keys('logs:source:*'):
+            self.client.delete(key)
+        for key in self.client.keys('logs:host:*'):
+            self.client.delete(key)
+        for key in self.client.keys('logs:severity:*'):
+            self.client.delete(key)
+        return count
+    
     # ==================== FILTER OPERATIONS ====================
     
     def create_filter(self, filter_data: Dict) -> str:
