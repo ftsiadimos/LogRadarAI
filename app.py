@@ -801,6 +801,13 @@ def api_ai_history_delete(history_id):
         return jsonify({'status': 'ok'})
     return jsonify({'error': 'History entry not found'}), 404
 
+@app.route('/api/ai-history', methods=['DELETE'])
+@require_redis_api
+def api_ai_history_clear_all():
+    """Clear all AI analysis history"""
+    count = redis_client.clear_all_analysis_history()
+    return jsonify({'status': 'ok', 'deleted': count})
+
 @app.route('/api/ollama/chat', methods=['POST'])
 @require_redis_api
 def api_ollama_chat():

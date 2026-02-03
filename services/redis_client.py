@@ -405,6 +405,16 @@ class RedisClient:
         self.client.zrem('ai_history:timeline', history_id)
         return True
     
+    def clear_all_analysis_history(self) -> int:
+        """Clear all AI analysis history entries"""
+        history_ids = self.client.zrange('ai_history:timeline', 0, -1)
+        count = 0
+        for history_id in history_ids:
+            self.client.delete(history_id)
+            count += 1
+        self.client.delete('ai_history:timeline')
+        return count
+    
     # ==================== STATS OPERATIONS ====================
     
     def get_stats(self) -> Dict:
