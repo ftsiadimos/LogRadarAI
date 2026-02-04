@@ -1387,7 +1387,7 @@ async function loadSettings() {
         document.getElementById('ollamaHost').value = settings.ollama_host || 'http://localhost:11434';
         document.getElementById('ollamaModel').value = settings.ollama_model || 'llama3.2';
         document.getElementById('analysisInterval').value = settings.analysis_interval || 300;
-        document.getElementById('logRetention').value = settings.log_retention_hours || 168;
+        document.getElementById('logRetention').value = settings.log_retention_hours || 12;
         document.getElementById('autoAnalyze').checked = settings.auto_analyze !== false;
         
         // Hide duplicates default setting

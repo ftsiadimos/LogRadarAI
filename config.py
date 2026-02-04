@@ -34,7 +34,7 @@ class Config:
     TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '')
     
     # Log retention (in hours)
-    LOG_RETENTION_HOURS = int(os.environ.get('LOG_RETENTION_HOURS', 168))  # 7 days
+    LOG_RETENTION_HOURS = int(os.environ.get('LOG_RETENTION_HOURS', 12))  # 12 hours
     
     # Analysis
     ANALYSIS_INTERVAL_SECONDS = int(os.environ.get('ANALYSIS_INTERVAL_SECONDS', 300))  # 5 minutes

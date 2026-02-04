@@ -156,11 +156,21 @@ class RedisClient:
         keys = self.client.keys('logs:host:*')
         return sorted([k.replace('logs:host:', '') for k in keys])
     
-    def cleanup_old_logs(self):
-        """Remove logs older than retention period"""
-        cutoff = time.time() - (Config.LOG_RETENTION_HOURS * 3600)
+    def cleanup_old_logs(self, retention_hours: int = None):
+        """Remove logs older than retention period and record cleanup status.
+        If retention_hours is not provided, read 'log_retention_hours' from settings (if available).
+        """
+        # Determine effective retention (hours) to use
+        try:
+            settings = self.get_settings()
+            used_retention = int(retention_hours if retention_hours is not None else settings.get('log_retention_hours', Config.LOG_RETENTION_HOURS))
+        except Exception:
+            used_retention = int(retention_hours if retention_hours is not None else Config.LOG_RETENTION_HOURS)
+
+        cutoff = time.time() - (used_retention * 3600)
         old_logs = self.client.zrangebyscore('logs:timeline', 0, cutoff)
         
+        removed = 0
         for log_id in old_logs:
             log = self.get_log(log_id)
             if log:
@@ -172,8 +182,36 @@ class RedisClient:
                 self.client.srem(f'logs:host:{hostname}', log_id)
             self.client.delete(log_id)
             self.client.zrem('logs:timeline', log_id)
+            removed += 1
         
-        return len(old_logs)
+        # Record last cleanup info so we can inspect it later (useful in Docker)
+        try:
+            now = datetime.now(timezone.utc).isoformat()
+            self.client.set('cleanup:last_run', now)
+            self.client.set('cleanup:last_removed', removed)
+            self.client.set('cleanup:last_used_retention', used_retention)
+        except Exception:
+            # Don't fail cleanup if recording status fails
+            pass
+        
+        return removed
+
+    def get_cleanup_status(self):
+        """Return cleanup last run info and current timeline count"""
+        try:
+            last_run = self.client.get('cleanup:last_run')
+            last_removed = self.client.get('cleanup:last_removed')
+            return {
+                'last_run': last_run,
+                'last_removed': int(last_removed) if last_removed is not None else 0,
+                'timeline_count': self.get_logs_count()
+            }
+        except Exception:
+            return {
+                'last_run': None,
+                'last_removed': 0,
+                'timeline_count': self.get_logs_count()
+            }
     
     def clear_all_logs(self) -> int:
         """Delete all logs from the database"""

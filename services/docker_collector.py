@@ -104,7 +104,7 @@ class DockerLogCollector:
                     del self.watched_containers[container_id]
                 return
             
-            print(f"[DockerLogCollector] Watching container: {container_name}")
+           # print(f"[DockerLogCollector] Watching container: {container_name}")
             
             # Stream logs from now
             for log in container.logs(stream=True, follow=True, since=int(time.time())):
@@ -130,8 +130,8 @@ class DockerLogCollector:
                 except Exception as e:
                     print(f"[DockerLogCollector] Error parsing log: {e}")
                     
-        except Exception as e:
-            print(f"[DockerLogCollector] Error watching container {container_id}: {e}")
+        #except Exception as e:
+         #   print(f"[DockerLogCollector] Error watching container {container_id}: {e}")
         finally:
             if container_id in self.watched_containers:
                 del self.watched_containers[container_id]

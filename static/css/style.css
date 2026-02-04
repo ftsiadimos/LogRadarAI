@@ -749,11 +749,16 @@ tr:hover {
 
 .analysis-card {
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .analysis-result-body {
-    max-height: 150px;
+    /* Allow the analysis area to be larger and flexible so more output is visible */
+    min-height: 150px;
+    max-height: 45vh; /* responsive cap to avoid pushing other content off-screen */
     overflow-y: auto;
+    resize: vertical; /* allow manual vertical resizing */
 }
 
 .recent-logs-card {

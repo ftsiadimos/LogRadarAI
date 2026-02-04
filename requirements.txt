@@ -11,3 +11,4 @@ python-dotenv==1.0.0
 docker==7.0.0
 ollama==0.1.6
 apscheduler==3.10.4
+rq-dashboard

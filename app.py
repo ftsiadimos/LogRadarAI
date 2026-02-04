@@ -243,11 +243,26 @@ def periodic_analysis():
         })
 
 def cleanup_task():
-    """Periodic cleanup of old logs"""
+    """Periodic cleanup of old logs (improved diagnostics). Uses the configured
+    'log_retention_hours' setting when available, otherwise falls back to Config."""
+    ts = datetime.now(timezone.utc).isoformat()
     try:
-        count = redis_client.cleanup_old_logs()
-        if count > 0:
-            print(f"[Scheduler] Cleaned up {count} old logs")
+        # Determine retention to use for this run (prefer saved settings)
+        try:
+            settings = redis_client.get_settings()
+            retention = int(settings.get('log_retention_hours', Config.LOG_RETENTION_HOURS))
+        except Exception:
+            retention = Config.LOG_RETENTION_HOURS
+
+        count = redis_client.cleanup_old_logs(retention_hours=retention)
+        status = redis_client.get_cleanup_status()
+        msg = (f"[Scheduler] Cleanup run at {ts} - removed {count} old logs "
+               f"(used_retention={retention}h) | timeline_count={status.get('timeline_count')} "
+               f"last_run={status.get('last_run')} last_removed={status.get('last_removed')}")
+        try:
+            app.logger.info(msg)
+        except Exception:
+            print(msg)
     except redis.exceptions.ConnectionError as e:
         print(f"[Scheduler] Redis connection error during cleanup: {e}")
     except Exception as e:
@@ -551,6 +566,38 @@ def api_clear_all_logs():
     """Delete all logs from the database"""
     count = redis_client.clear_all_logs()
     return jsonify({'status': 'ok', 'deleted': count})
+
+# Manual cleanup (admin only)
+@app.route('/api/logs/cleanup', methods=['POST'])
+@login_required
+@require_redis_api
+def api_cleanup_old_logs():
+    """Trigger immediate cleanup of logs older than retention period (admin only)"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        # Use configured retention if available
+        try:
+            settings = redis_client.get_settings()
+            retention = int(settings.get('log_retention_hours', Config.LOG_RETENTION_HOURS))
+        except Exception:
+            retention = Config.LOG_RETENTION_HOURS
+
+        count = redis_client.cleanup_old_logs(retention_hours=retention)
+        status = redis_client.get_cleanup_status()
+        print(f"[Admin] Manual cleanup removed {count} old logs (used_retention={retention}h)")
+        return jsonify({
+            'status': 'ok',
+            'deleted': count,
+            'redis_connected': redis_client.ping(),
+            'timeline_count': status.get('timeline_count'),
+            'retention_hours': retention,
+            'cleanup_status': status
+        })
+    except redis.exceptions.ConnectionError as e:
+        return jsonify({'error': 'Redis connection failed', 'message': str(e)}), 503
+    except Exception as e:
+        return jsonify({'error': 'Cleanup failed', 'message': str(e)}), 500
 
 @app.route('/api/logs/ingest', methods=['POST'])
 @require_redis_api

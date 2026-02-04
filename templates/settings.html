@@ -125,8 +125,8 @@
         <div class="card-body">
             <div class="form-group">
                 <label class="form-label" for="logRetention">Log Retention (hours)</label>
-                <input type="number" class="form-control" id="logRetention" value="168" min="1">
-                <small style="color: #666;">How long to keep logs (168 hours = 7 days)</small>
+                <input type="number" class="form-control" id="logRetention" value="12" min="1">
+                <small style="color: #666;">How long to keep logs (12 hours)</small>
             </div>
             
             <div class="form-group">
@@ -148,6 +148,12 @@
             <button type="button" class="btn btn-danger" onclick="clearAllLogs()">
                 <i class="fas fa-trash-alt"></i> Clear All Logs
             </button>
+            {% if current_user.is_admin %}
+            <button type="button" class="btn btn-outline" id="runCleanupBtn" onclick="runCleanupNow()" style="margin-left:0.5rem;">
+                <i class="fas fa-broom"></i> Run Cleanup Now
+            </button>
+            <small style="color: #666; display: block; margin-top: 0.5rem;">Run cleanup to remove logs older than the configured retention period.</small>
+            {% endif %}
             <small style="color: #a00; display: block; margin-top: 0.5rem;">Warning: This will permanently delete all logs from the database.</small>
             <small style="color: #666; display: block; margin-top: 0.25rem;">Note: It may take a few moments for the dashboard and counts to reflect the change.</small>
         </div>
@@ -311,6 +317,30 @@ async function clearAllLogs() {
     } catch (error) {
         console.error('Error clearing logs:', error);
         showToast('Error', 'Failed to clear logs', 'error');
+    }
+}
+
+async function runCleanupNow() {
+    if (!confirm('Run cleanup now? This will remove logs older than the configured retention period.')) return;
+    const btn = document.getElementById('runCleanupBtn');
+    try {
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...'; }
+        const response = await fetch('/api/logs/cleanup', { method: 'POST' });
+        if (response.ok) {
+            const data = await response.json();
+            showToast('Success', `Removed ${data.deleted} old logs`, 'success');
+            try { fetchStats(); } catch(e) {}
+        } else if (response.status === 403) {
+            showToast('Access denied', 'You must be an admin to run cleanup', 'error');
+        } else {
+            const body = await response.json().catch(()=>({}));
+            showToast('Error', body.message || 'Cleanup failed', 'error');
+        }
+    } catch (error) {
+        console.error('Error running cleanup:', error);
+        showToast('Error', 'Cleanup failed', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-broom"></i> Run Cleanup Now'; }
     }
 }
 </script>

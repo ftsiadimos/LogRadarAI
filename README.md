@@ -105,7 +105,7 @@ services:
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
-      - LOG_RETENTION_HOURS=${LOG_RETENTION_HOURS:-168}
+      - LOG_RETENTION_HOURS=${LOG_RETENTION_HOURS:-12}
       - ANALYSIS_INTERVAL_SECONDS=${ANALYSIS_INTERVAL_SECONDS:-300}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -205,7 +205,7 @@ python app.py
 | `OLLAMA_MODEL` | Ollama model name | `llama3.2` |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token | - |
 | `TELEGRAM_CHAT_ID` | Telegram chat ID | - |
-| `LOG_RETENTION_HOURS` | Log retention period | `168` (7 days) |
+| `LOG_RETENTION_HOURS` | Log retention period | `12` (12 hours) |
 | `ANALYSIS_INTERVAL_SECONDS` | Auto-analysis interval | `300` |
 
 ### Configuring Rsyslog
