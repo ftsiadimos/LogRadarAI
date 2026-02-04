@@ -254,6 +254,11 @@ def cleanup_task():
         except Exception:
             retention = Config.LOG_RETENTION_HOURS
 
+        try:
+            app.logger.info(f"[Scheduler] Running cleanup now (will use retention={retention}h)")
+        except Exception:
+            print(f"[Scheduler] Running cleanup now (will use retention={retention}h)")
+
         count = redis_client.cleanup_old_logs(retention_hours=retention)
         status = redis_client.get_cleanup_status()
         msg = (f"[Scheduler] Cleanup run at {ts} - removed {count} old logs "
@@ -342,7 +347,12 @@ def init_services():
         'interval',
         seconds=analysis_interval
     )
-    scheduler.add_job(cleanup_task, 'interval', hours=1)
+    # Schedule cleanup to run immediately and then every hour
+    scheduler.add_job(cleanup_task, 'interval', hours=1, next_run_time=datetime.now(timezone.utc))
+    try:
+        app.logger.info("[Scheduler] Jobs registered; cleanup scheduled to run immediately")
+    except Exception:
+        print("[Scheduler] Jobs registered; cleanup scheduled to run immediately")
     
     # Add periodic Redis health check
     def check_redis_health():
@@ -361,6 +371,10 @@ def init_services():
     
     scheduler.add_job(check_redis_health, 'interval', seconds=30)
     scheduler.start()
+    try:
+        app.logger.info("[Scheduler] started")
+    except Exception:
+        print("[Scheduler] started")
     
     # Ensure at least one admin user exists (only if Redis is available)
     if _redis_available:
@@ -1111,16 +1125,24 @@ def create_app():
     
     # Initialize services once (for flask run)
     if not _services_initialized:
-        init_services()
-        _services_initialized = True
+        # In debug mode, only initialize in the reloader child process (WERKZEUG_RUN_MAIN)
+        if Config.DEBUG and os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+            print("[App] Debug reloader detected - delaying service initialization to child process")
+        else:
+            init_services()
+            _services_initialized = True
     
     return app
 
 # Auto-initialize services when module is loaded (for flask run)
 with app.app_context():
     if not _services_initialized:
-        init_services()
-        _services_initialized = True
+        # In debug mode, only initialize in the reloader child process (WERKZEUG_RUN_MAIN)
+        if Config.DEBUG and os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+            print("[App] Debug reloader detected - delaying service initialization to child process")
+        else:
+            init_services()
+            _services_initialized = True
 
 if __name__ == '__main__':
     # Run the app with socketio
