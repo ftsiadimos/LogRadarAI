@@ -78,12 +78,24 @@ git clone https://github.com/yourusername/logaimonitor.git
 cd logaimonitor
 ```
 
-2. Start the application:
+2. Copy the example Compose file and edit it (or use the web UI later to change settings):
 ```bash
+cp docker-compose.example.yml docker-compose.yml
+# Edit `docker-compose.yml` to set required environment variables (e.g. SECRET_KEY, OLLAMA_HOST, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID),
+# or leave them as defaults and change them later via the web UI in Settings.
+```
+
+3. Start the application:
+```bash
+# Using Docker Compose v2
+docker compose up -d
+
+# Or with the older standalone docker-compose:
 docker-compose up -d
 ```
 Default Credentials: Username: admin / Password: admin
 
+<<<<<<< HEAD
 Example `docker-compose` (use the included `docker-compose.example.yml` or drop it into your project root as `docker-compose.yml`):
 
 ```yaml
@@ -161,7 +173,7 @@ networks:
     driver: bridge
 ```
 
-3. Access the web interface at `http://localhost:5059`
+4. Access the web interface at `http://localhost:5059`
 
 ### Manual Installation
 
