@@ -186,6 +186,9 @@ def log_callback(log_entry):
                 if f.get('notify_telegram', False) and settings.get('telegram_enabled', False):
                     if ollama_analyzer.is_available():
                         alert_msg = ollama_analyzer.generate_alert_message(log_entry, {})
+                        # Fallback to original log message if AI returns an empty/whitespace-only string
+                        if not alert_msg or not alert_msg.strip():
+                            alert_msg = log_entry.get('message', '')[:200]
                     else:
                         alert_msg = log_entry.get('message', '')[:200]
                     
