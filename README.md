@@ -2,7 +2,8 @@
 
 <p align="center">
   <strong>A powerful log monitoring and analysis application that collects logs from Linux servers (via rsyslog) and Docker containers, analyzes them using local AI (Ollama), and sends intelligent alerts via Telegram.</strong><br>
-  Practical and easy to deploy and operate.
+  Practical and easy to deploy and operate.  
+  <strong>Note:</strong> LogRadarAI focuses on **recent logs** for real-time analysis and alerting; it is *not* designed to provide a permanent log archive or long-term history.
 </p>
 
 <p align="center">
@@ -139,7 +140,7 @@ python app.py
 | `OLLAMA_MODEL` | Ollama model name | `llama3.2` |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token | - |
 | `TELEGRAM_CHAT_ID` | Telegram chat ID | - |
-| `LOG_RETENTION_HOURS` | Log retention period | `12` (12 hours) |
+| `LOG_RETENTION_HOURS` | Log retention period (only recent logs are kept; not a full history) | `2` (2 hours) |
 | `ANALYSIS_INTERVAL_SECONDS` | Auto-analysis interval | `300` |
 
 ### Configuring Rsyslog
