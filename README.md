@@ -92,7 +92,9 @@ cp docker-compose.example.yml docker-compose.yml
 # Using Docker Compose v2
 docker compose up -d
 ```
-Default Credentials: Username: admin / Password: admin
+> ⚠️ **Default Credentials:**  
+> **Username:** `admin` / **Password:** `admin`  
+> **Important:** For security, change these credentials after your first login!
 
 4. Access the web interface at `http://localhost:5059`
 
