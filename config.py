@@ -5,6 +5,20 @@ import os
 
 class Config:
     """Application configuration"""
+
+    # version is stored in a simple file at the project root (used by the
+    # about page and by CI workflows).  If the file is missing we fall back to
+    # an environment variable so that containers built without a copy can still
+    # expose something.
+    def _load_version():
+        path = os.path.join(os.path.dirname(__file__), 'VERSION')
+        try:
+            with open(path) as f:
+                return f.read().strip()
+        except Exception:
+            return os.environ.get('VERSION', '0.0.0')
+
+    VERSION = _load_version()
     
     # Flask
     SECRET_KEY = os.environ.get('SECRET_KEY', 'logaimonitor-secret-key-change-in-production')

@@ -24,6 +24,10 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'logai-monitor-secret-key-change-in-production')
 
+# make the current version available in templates (globals are easier than
+# passing to every render call)
+app.jinja_env.globals['VERSION'] = Config.VERSION
+
 # Track Redis connection status
 _redis_available = False
 _redis_error_message = None
@@ -505,7 +509,8 @@ def users():
 @require_redis
 def about():
     """About page"""
-    return render_template('about.html')
+    # pass version explicitly in case someone overrides the global later
+    return render_template('about.html', version=Config.VERSION)
 
 # ==================== API ROUTES ====================
 
