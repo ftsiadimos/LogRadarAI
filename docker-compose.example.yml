@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   logaimonitor:
+  # image: ghcr.io/ftsiadimos/logradarai - Both images are the same.
     image: ftsiadimos/logradaraiq
     container_name: logaimonitor
     restart: unless-stopped

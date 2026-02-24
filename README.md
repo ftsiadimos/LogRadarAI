@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/vue.js-3.x-brightgreen.svg" alt="Vue.js 3">
   <img src="https://img.shields.io/badge/license-GPL--3.0-orange.svg" alt="License GPL-3.0">
   <a href="https://hub.docker.com/r/ftsiadimos/logradaraiq"><img src="https://img.shields.io/docker/pulls/ftsiadimos/logradaraiq?style=flat-square&logo=docker" alt="Docker Pulls"></a>
+  <a href="https://github.com/users/ftsiadimos/packages/container/package/logaimonitor"><img src="https://img.shields.io/badge/ghcr.io-available-brightgreen.svg" alt="GHCR Available"></a>
 </p>
 
 ---
@@ -90,9 +91,6 @@ cp docker-compose.example.yml docker-compose.yml
 ```bash
 # Using Docker Compose v2
 docker compose up -d
-
-# Or with the older standalone docker-compose:
-docker-compose up -d
 ```
 Default Credentials: Username: admin / Password: admin
 
