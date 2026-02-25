@@ -367,5 +367,3 @@ Copyright (C) 2026 Fotios Tsiadimos
 - [Flask](https://flask.palletsprojects.com/) - Web framework
 - [Redis](https://redis.io/) - In-memory data store
 - [Font Awesome](https://fontawesome.com/) - Icons
-
-test
