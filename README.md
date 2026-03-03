@@ -366,4 +366,21 @@ Copyright (C) 2026 Fotios Tsiadimos
 - [Ollama](https://ollama.ai) - Local AI inference
 - [Flask](https://flask.palletsprojects.com/) - Web framework
 - [Redis](https://redis.io/) - In-memory data store
-- [Font Awesome](https://fontawesome.com/) - Icons
+| [Font Awesome](https://fontawesome.com/) - Icons (local copy stored in `static/vendor/fontawesome` to avoid CDN dependency) (served locally from `static/vendor/fontawesome`)
+- [Socket.IO](https://socket.io/) - realtime client library (served locally from `static/vendor/socket.io`)
+
+
+### Offline / CDN-free operation
+
+By default the app avoids external CSS/JS fetches; templates reference
+bundled files under `static/vendor`. You should populate those
+locations with the appropriate minified assets (grab them from the
+corresponding CDN URLs or via package manager). With the files in place,
+the UI loads instantly even when the server has no network access.
+
+You must also include the **webfont files** that Font Awesome needs. The
+CSS in `static/vendor/fontawesome/css/all.min.css` references fonts under
+`../webfonts/`, so create that directory and populate it with the
+corresponding `*.woff2`, `*.ttf`, etc. files from a Font Awesome release
+archive. Without the fonts the icons will show up as blank or square
+boxes.
