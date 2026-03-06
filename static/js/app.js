@@ -1383,6 +1383,7 @@ async function loadSettings() {
         document.getElementById('telegramEnabled').checked = settings.telegram_enabled;
         document.getElementById('telegramBotToken').value = settings.telegram_bot_token || '';
         document.getElementById('telegramChatId').value = settings.telegram_chat_id || '';
+        document.getElementById('telegramCooldown').value = settings.telegram_cooldown_minutes ?? 60;
         document.getElementById('ollamaEnabled').checked = settings.ollama_enabled !== false;
         document.getElementById('ollamaHost').value = settings.ollama_host || 'http://localhost:11434';
         document.getElementById('ollamaModel').value = settings.ollama_model || 'llama3.2';
@@ -1430,6 +1431,7 @@ async function saveSettings() {
         telegram_enabled: document.getElementById('telegramEnabled').checked,
         telegram_bot_token: document.getElementById('telegramBotToken').value,
         telegram_chat_id: document.getElementById('telegramChatId').value,
+        telegram_cooldown_minutes: parseInt(document.getElementById('telegramCooldown').value) || 0,
         ollama_enabled: document.getElementById('ollamaEnabled').checked,
         ollama_host: document.getElementById('ollamaHost').value,
         ollama_model: document.getElementById('ollamaModel').value,

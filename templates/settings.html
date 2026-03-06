@@ -31,6 +31,12 @@
                        placeholder="Enter your Telegram chat ID">
                 <small style="color: #666;">Your personal chat ID or group ID where alerts will be sent</small>
             </div>
+
+            <div class="form-group">
+                <label class="form-label" for="telegramCooldown">Notification Cooldown (minutes)</label>
+                <input type="number" class="form-control" id="telegramCooldown" value="60" min="0">
+                <small style="color: #666;">How long to wait before sending another Telegram alert for the same issue from the same host. Set to 0 to disable cooldown (send every time).</small>
+            </div>
             
             <button type="button" class="btn btn-outline" id="testTelegramBtn" onclick="testTelegram()">
                 <i class="fab fa-telegram"></i> Test Connection

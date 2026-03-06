@@ -405,6 +405,7 @@ class RedisClient:
             'telegram_enabled': False,
             'telegram_bot_token': '',
             'telegram_chat_id': '',
+            'telegram_cooldown_minutes': 60,
             'ollama_enabled': True,
             'ollama_host': Config.OLLAMA_HOST,
             'ollama_model': Config.OLLAMA_MODEL,
@@ -418,6 +419,20 @@ class RedisClient:
             'hide_duplicates_default': False
         }
     
+    # ==================== NOTIFICATION COOLDOWN OPERATIONS ====================
+
+    def check_notification_cooldown(self, hostname: str, filter_id: str) -> bool:
+        """Return True if a notification for this host+filter was recently sent (still in cooldown)."""
+        key = f"notif_cooldown:{hostname}:{filter_id}"
+        return self.client.exists(key) > 0
+
+    def set_notification_cooldown(self, hostname: str, filter_id: str, cooldown_minutes: int):
+        """Record that a notification was just sent and set its TTL."""
+        if cooldown_minutes <= 0:
+            return
+        key = f"notif_cooldown:{hostname}:{filter_id}"
+        self.client.set(key, '1', ex=cooldown_minutes * 60)
+
     # ==================== AI HISTORY OPERATIONS ====================
     
     def store_analysis_history(self, analysis_data: Dict) -> str:

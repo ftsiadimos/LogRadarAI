@@ -188,20 +188,26 @@ def log_callback(log_entry):
                 
                 # Send Telegram notification if enabled
                 if f.get('notify_telegram', False) and settings.get('telegram_enabled', False):
-                    if ollama_analyzer.is_available():
-                        alert_msg = ollama_analyzer.generate_alert_message(log_entry, {})
-                        # Fallback to original log message if AI returns an empty/whitespace-only string
-                        if not alert_msg or not alert_msg.strip():
+                    hostname = log_entry.get('hostname', log_entry.get('source', 'unknown'))
+                    filter_id = f.get('id', 'unknown')
+                    cooldown_minutes = int(settings.get('telegram_cooldown_minutes', 60))
+                    in_cooldown = cooldown_minutes > 0 and redis_client.check_notification_cooldown(hostname, filter_id)
+                    if not in_cooldown:
+                        if ollama_analyzer.is_available():
+                            alert_msg = ollama_analyzer.generate_alert_message(log_entry, {})
+                            # Fallback to original log message if AI returns an empty/whitespace-only string
+                            if not alert_msg or not alert_msg.strip():
+                                alert_msg = log_entry.get('message', '')[:200]
+                        else:
                             alert_msg = log_entry.get('message', '')[:200]
-                    else:
-                        alert_msg = log_entry.get('message', '')[:200]
-                    
-                    telegram_notifier.send_alert(
-                        log_entry.get('severity', 'info'),
-                        log_entry.get('source', 'unknown'),
-                        alert_msg,
-                        hostname=log_entry.get('hostname')
-                    )
+
+                        telegram_notifier.send_alert(
+                            log_entry.get('severity', 'info'),
+                            log_entry.get('source', 'unknown'),
+                            alert_msg,
+                            hostname=hostname
+                        )
+                        redis_client.set_notification_cooldown(hostname, filter_id, cooldown_minutes)
 
 def periodic_analysis():
     """Periodic log analysis task"""
