@@ -98,6 +98,24 @@
         <p><strong>Privacy:</strong> All analysis is done locally using Ollama - no data is sent to external services.</p>
     </div>
 </div>
+
+<!-- Log Detail Modal -->
+<div class="modal-overlay" id="logDetailModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Log Details</h3>
+            <button class="modal-close" onclick="closeModal('logDetailModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="logDetailContent">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" id="analyzeLogBtn" onclick="analyzeLog()">
+                <i class="fas fa-brain"></i> Analyze with AI
+            </button>
+            <button class="btn btn-secondary" onclick="closeModal('logDetailModal')">Close</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

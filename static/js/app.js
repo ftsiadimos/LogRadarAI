@@ -36,6 +36,45 @@ function applyTheme(theme) {
     localStorage.setItem('ui_theme', theme || 'default');
 }
 
+// Available themes cycle order
+const THEMES = ['default', 'terminal'];
+const THEME_META = {
+    default:  { icon: 'fa-moon',      label: 'Default',  title: 'Switch to Terminal theme' },
+    terminal: { icon: 'fa-terminal',  label: 'Terminal', title: 'Switch to Default theme'  }
+};
+
+function toggleTheme() {
+    const current = localStorage.getItem('ui_theme') || 'default';
+    const idx = THEMES.indexOf(current);
+    const next = THEMES[(idx + 1) % THEMES.length];
+    applyTheme(next);
+    updateThemeToggleBtn(next);
+}
+
+function updateThemeToggleBtn(theme) {
+    const btn   = document.getElementById('themeToggleBtn');
+    const icon  = document.getElementById('themeToggleIcon');
+    const label = document.getElementById('themeToggleLabel');
+    if (!btn) return;
+    const meta = THEME_META[theme] || THEME_META['default'];
+    // Swap icon
+    if (icon) {
+        icon.className = `fas ${meta.icon}`;
+    }
+    if (label) label.textContent = meta.label;
+    btn.title = meta.title;
+    // Style button to match terminal theme
+    if (theme === 'terminal') {
+        btn.style.borderColor = '#00aa00';
+        btn.style.color = '#00ff00';
+        btn.style.backgroundColor = '#001a00';
+    } else {
+        btn.style.borderColor = 'rgba(0,0,0,0.15)';
+        btn.style.color = '#555';
+        btn.style.backgroundColor = '';
+    }
+}
+
 function previewTheme(theme) {
     const preview = document.getElementById('themePreview');
     if (preview) {
@@ -1873,9 +1912,10 @@ async function loadHideDuplicatesDefault() {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    // Apply saved theme immediately
+    // Apply saved theme immediately and sync the toggle button
     const savedTheme = localStorage.getItem('ui_theme') || 'default';
     applyTheme(savedTheme);
+    updateThemeToggleBtn(savedTheme);
     
     initSocket();
     fetchStats();

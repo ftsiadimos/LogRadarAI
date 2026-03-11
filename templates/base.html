@@ -342,7 +342,11 @@
                             <span class="status-dot"></span> Connected
                         </div>
                     </div>
-                    <div class="user-menu" style="display: flex; align-items: center; gap: 1rem; margin-left: 1rem;">
+                    <div class="user-menu" style="display: flex; align-items: center; gap: 0.75rem; margin-left: 1rem;">
+                        <button id="themeToggleBtn" onclick="toggleTheme()" title="Toggle theme" style="background: none; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 0.35rem 0.6rem; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; color: #555; transition: all 0.2s;">
+                            <i id="themeToggleIcon" class="fas fa-moon"></i>
+                            <span id="themeToggleLabel">Theme</span>
+                        </button>
                         <span style="color: #666;">
                             <i class="fas fa-user"></i> {{ current_user.username }}
                         </span>
