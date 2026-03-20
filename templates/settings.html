@@ -88,9 +88,12 @@
             </div>
             
             <div class="form-group">
-                <label class="form-label" for="analysisInterval">Analysis Interval (seconds)</label>
-                <input type="number" class="form-control" id="analysisInterval" value="300" min="60">
+                <label class="form-label" for="analysisInterval">Analysis Interval (minutes)</label>
+                <input type="number" class="form-control" id="analysisInterval" value="5" min="1">
                 <small style="color: #666;">How often to run automatic batch analysis</small>
+                <div style="color: #c00; margin-top: 0.5rem; font-size: 0.95em;">
+                    <strong>Note:</strong> After changing the interval and saving, you must <b>restart the app</b> for the new interval to take effect.
+                </div>
             </div>
         </div>
     </div>

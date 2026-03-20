@@ -351,14 +351,14 @@ def init_services():
     # Get analysis interval (use default if Redis unavailable)
     try:
         settings = redis_client.get_settings() if _redis_available else {}
-        analysis_interval = settings.get('analysis_interval', Config.ANALYSIS_INTERVAL_SECONDS)
+        analysis_interval = settings.get('analysis_interval', Config.ANALYSIS_INTERVAL_MINUTES)
     except:
-        analysis_interval = Config.ANALYSIS_INTERVAL_SECONDS
+        analysis_interval = Config.ANALYSIS_INTERVAL_MINUTES
     
     scheduler.add_job(
         periodic_analysis,
         'interval',
-        seconds=analysis_interval
+        minutes=analysis_interval
     )
     # Schedule cleanup to run immediately and then every hour
     scheduler.add_job(cleanup_task, 'interval', hours=1, next_run_time=datetime.now(timezone.utc))

@@ -409,7 +409,7 @@ class RedisClient:
             'ollama_enabled': True,
             'ollama_host': Config.OLLAMA_HOST,
             'ollama_model': Config.OLLAMA_MODEL,
-            'analysis_interval': Config.ANALYSIS_INTERVAL_SECONDS,
+            'analysis_interval': Config.ANALYSIS_INTERVAL_MINUTES,
             'log_retention_hours': Config.LOG_RETENTION_HOURS,
             'auto_analyze': True,
             'alert_on_critical': True,

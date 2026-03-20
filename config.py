@@ -51,5 +51,5 @@ class Config:
     LOG_RETENTION_HOURS = int(os.environ.get('LOG_RETENTION_HOURS', 2))  # 12 hours
     
     # Analysis
-    ANALYSIS_INTERVAL_SECONDS = int(os.environ.get('ANALYSIS_INTERVAL_SECONDS', 300))  # 5 minutes
+    ANALYSIS_INTERVAL_MINUTES = int(os.environ.get('ANALYSIS_INTERVAL_MINUTES', 5))  # 5 minutes
     MAX_LOGS_PER_ANALYSIS = int(os.environ.get('MAX_LOGS_PER_ANALYSIS', 100))
