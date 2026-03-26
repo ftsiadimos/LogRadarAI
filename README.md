@@ -36,7 +36,7 @@
 
 | Dark Theme | Lite Theme |
 | --- | --- |
-| <a href="mis/image1.png" target="_blank"><img src="mis/image1.png" width="420" alt="Dashboard View"></a> | <a href="mis/image.png" target="_blank"><img src="mis/image.png" width="420" alt="AI Troubleshooter modal"></a> |
+| <a href="mis/image1.webp" target="_blank"><img src="mis/image1.webp" width="420" alt="Dashboard View"></a> | <a href="mis/image.webp" target="_blank"><img src="mis/image.webp" width="420" alt="AI Troubleshooter modal"></a> |
 | *AI Analyzer* | *AI Analyzer* |
 
 ---
