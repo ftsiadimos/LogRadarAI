@@ -417,12 +417,12 @@
     <h2>Architecture</h2>
     <div class="arch-diagram">
 ┌─────────────────┐     ┌─────────────────┐
-│  Linux Servers  │────▶│   Syslog UDP   │
+│  Linux Servers  │───▶│   Syslog UDP    │
 │   (rsyslog)     │     │   Port 5514     │
 └─────────────────┘     └────────┬────────┘
                                  │
 ┌─────────────────┐     ┌────────▼────────┐     ┌─────────────────┐
-│    Docker       │────▶│   LogAI        │───▶│     Redis       │
+│    Docker       │───▶│   LogAI         │───▶│     Redis       │
 │   Containers    │     │   Monitor       │     │   (Storage)     │
 └─────────────────┘     └────────┬────────┘     └─────────────────┘
                                  │
