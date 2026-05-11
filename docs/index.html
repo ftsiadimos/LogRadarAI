@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="LogRadarAI — Log monitoring and analysis using local AI, rsyslog, Docker, and Telegram alerts." />
+  <title>LogRadarAI — LogAI Monitor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --border: #30363d;
+      --text: #f8f9fa;
+      --muted: #c9d1d9;
+      --dim: #8b949e;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --warn: #d29922;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    /* ── NAV ─────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      list-style: none;
+      margin: 0;
+      padding: 0.55rem 0;
+    }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+    nav a:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+
+    /* ── HERO ────────────────────────────────────── */
+    header {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3.5rem 1.5rem 2rem;
+    }
+    .hero-label {
+      display: inline-block;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: clamp(2.2rem, 5vw, 3.75rem);
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+    }
+    .version {
+      display: inline-block;
+      font-size: 0.8rem;
+      background: rgba(63,185,80,0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(63,185,80,0.35);
+      border-radius: 999px;
+      padding: 0.2rem 0.7rem;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    p.lead {
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin: 0.75rem 0 1.25rem;
+    }
+    .note {
+      color: var(--dim);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 1.1rem;
+    }
+    .badge-row img { height: 20px; }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #0d1117; }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* ── MAIN CONTENT ────────────────────────────── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+    section {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    h2 {
+      margin: 0 0 1rem;
+      font-size: 1.5rem;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    h3 {
+      margin: 1.5rem 0 0.5rem;
+      font-size: 1.1rem;
+      color: var(--muted);
+    }
+    p { margin: 0.5rem 0; color: var(--muted); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { margin: 0.5rem 0 0.5rem 1.4rem; color: var(--muted); }
+    li { margin-bottom: 0.3rem; }
+    code {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      font-size: 0.88em;
+      color: #e3b341;
+    }
+    pre {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 1.1rem 1.25rem;
+      overflow-x: auto;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      margin: 0.75rem 0;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+    .warn-box {
+      background: rgba(210,153,34,0.1);
+      border: 1px solid rgba(210,153,34,0.35);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--warn);
+      font-size: 0.92rem;
+      margin: 0.75rem 0;
+    }
+
+    /* ── FEATURES GRID ───────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+    }
+    .feature-card .icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+    .feature-card h3 { margin: 0 0 0.3rem; font-size: 1rem; color: var(--text); }
+    .feature-card p { margin: 0; font-size: 0.9rem; }
+
+    /* ── SCREENSHOTS ─────────────────────────────── */
+    .screenshots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+    @media (max-width: 640px) { .screenshots { grid-template-columns: 1fr; } }
+    .screenshots figure {
+      margin: 0;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .screenshots img {
+      width: 100%;
+      display: block;
+    }
+    .screenshots figcaption {
+      padding: 0.6rem 0.9rem;
+      font-size: 0.85rem;
+      color: var(--dim);
+      text-align: center;
+    }
+
+    /* ── ARCHITECTURE ────────────────────────────── */
+    .arch-diagram {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-size: 0.88rem;
+      color: #c9d1d9;
+      white-space: pre;
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    /* ── PORTS TABLE ─────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      font-size: 0.92rem;
+    }
+    th {
+      background: var(--bg2);
+      color: var(--text);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.7rem 1rem;
+      border: 1px solid var(--border);
+    }
+    td {
+      padding: 0.65rem 1rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── TECH STACK PILLS ────────────────────────── */
+    .stack-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.75rem;
+    }
+    .pill {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    /* ── FOOTER ──────────────────────────────────── */
+    footer {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--dim);
+      font-size: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    @media (max-width: 600px) {
+      nav ul { gap: 0; }
+      nav a { padding: 0.35rem 0.45rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <ul>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#screenshots">Screenshots</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#quickstart">Quick Start</a></li>
+    <li><a href="#configuration">Configuration</a></li>
+    <li><a href="#rsyslog">Rsyslog</a></li>
+    <li><a href="#docker-external">Docker</a></li>
+    <li><a href="#telegram">Telegram</a></li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="#ports">Ports</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+  </ul>
+</nav>
+
+<header>
+  <span class="hero-label">🛡️ Open Source · GPL-3.0</span>
+  <h1>LogRadarAI <span class="version">v2.2.2</span></h1>
+  <p class="lead">A powerful log monitoring and analysis application that collects logs from Linux servers (via rsyslog) and Docker containers, analyzes them using local AI (Ollama), and sends intelligent alerts via Telegram.</p>
+  <p class="note">LogRadarAI focuses on <strong>recent logs</strong> for real-time analysis and alerting — it is not designed as a permanent log archive.</p>
+
+  <div class="badge-row">
+    <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+">
+    <img src="https://img.shields.io/badge/flask-2.x-green.svg" alt="Flask 2.x">
+    <img src="https://img.shields.io/badge/vue.js-3.x-brightgreen.svg" alt="Vue.js 3">
+    <img src="https://img.shields.io/badge/license-GPL--3.0-orange.svg" alt="License GPL-3.0">
+    <a href="https://hub.docker.com/r/ftsiadimos/logradaraiq"><img src="https://img.shields.io/docker/pulls/ftsiadimos/logradaraiq?style=flat-square&logo=docker" alt="Docker Pulls"></a>
+    <a href="https://github.com/users/ftsiadimos/packages/container/package/logaimonitor"><img src="https://img.shields.io/badge/ghcr.io-available-brightgreen.svg" alt="GHCR Available"></a>
+  </div>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://hub.docker.com/r/ftsiadimos/logradaraiq">Docker Hub</a>
+    <a class="btn btn-secondary" href="https://github.com/ftsiadimos/logaimonitor">GitHub</a>
+    <a class="btn btn-secondary" href="#quickstart">Quick Start ↓</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <h2>Features</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon">📊</div>
+        <h3>Dashboard</h3>
+        <p>Real-time overview of log statistics and system health.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📝</div>
+        <h3>Log Collection</h3>
+        <p>Collect logs from rsyslog (UDP/TCP) and Docker containers.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🤖</div>
+        <h3>AI Analysis</h3>
+        <p>Analyze logs using a local Ollama LLM for intelligent insights.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔔</div>
+        <h3>Smart Alerts</h3>
+        <p>Create filters to detect patterns and receive Telegram notifications.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🐳</div>
+        <h3>Docker Integration</h3>
+        <p>Auto-discover and monitor Docker container logs.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💬</div>
+        <h3>AI Chat</h3>
+        <p>Interactive chat assistant for real-time log troubleshooting.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎨</div>
+        <h3>Modern UI</h3>
+        <p>Clean, responsive interface inspired by oVirt/Foreman. Offline-capable — no CDN required.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOTS -->
+  <section id="screenshots">
+    <h2>Screenshots</h2>
+    <div class="screenshots">
+      <figure>
+        <a href="https://github.com/ftsiadimos/logaimonitor/raw/main/mis/image1.webp" target="_blank">
+          <img src="https://github.com/ftsiadimos/logaimonitor/raw/main/mis/image1.webp" alt="Dashboard — Dark Theme" loading="lazy" />
+        </a>
+        <figcaption>AI Analyzer — Dark Theme</figcaption>
+      </figure>
+      <figure>
+        <a href="https://github.com/ftsiadimos/logaimonitor/raw/main/mis/image2.webp" target="_blank">
+          <img src="https://github.com/ftsiadimos/logaimonitor/raw/main/mis/image2.webp" alt="AI Troubleshooter — Lite Theme" loading="lazy" />
+        </a>
+        <figcaption>AI Analyzer — Lite Theme</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section id="architecture">
+    <h2>Architecture</h2>
+    <div class="arch-diagram">
+┌─────────────────┐     ┌─────────────────┐
+│  Linux Servers  │────▶│   Syslog UDP   │
+│   (rsyslog)     │     │   Port 5514     │
+└─────────────────┘     └────────┬────────┘
+                                 │
+┌─────────────────┐     ┌────────▼────────┐     ┌─────────────────┐
+│    Docker       │────▶│   LogAI        │───▶│     Redis       │
+│   Containers    │     │   Monitor       │     │   (Storage)     │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                 │
+                        ┌────────▼────────┐     ┌─────────────────┐
+                        │   Ollama AI     │───▶│    Telegram     │
+                        │   (Analysis)    │     │   (Alerts)      │
+                        └─────────────────┘     └─────────────────┘</div>
+  </section>
+
+  <!-- QUICK START -->
+  <section id="quickstart">
+    <h2>Quick Start</h2>
+
+    <h3>Docker Compose (Recommended)</h3>
+    <pre><code>git clone https://github.com/ftsiadimos/logaimonitor.git
+cd logaimonitor
+cp docker-compose.example.yml docker-compose.yml
+# Edit docker-compose.yml — set SECRET_KEY, OLLAMA_HOST,
+# TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (or configure via the web UI later)
+docker compose up -d</code></pre>
+    <div class="warn-box">
+      ⚠️ <strong>Default Credentials:</strong> username <code>admin</code> / password <code>admin</code><br>
+      Change these immediately after first login.
+    </div>
+    <p>Open <a href="http://localhost:5059">http://localhost:5059</a>.</p>
+
+    <h3>Manual Installation</h3>
+    <pre><code>pip install -r requirements.txt
+
+# Start Redis
+docker run -d --name redis -p 6379:6379 redis:7-alpine
+
+# Install Ollama and pull a model
+curl -fsSL https://ollama.ai/install.sh | sh
+ollama pull llama3.2
+ollama serve
+
+# Run the app
+python app.py</code></pre>
+  </section>
+
+  <!-- CONFIGURATION -->
+  <section id="configuration">
+    <h2>Configuration</h2>
+    <p>Environment variables can be set in <code>docker-compose.yml</code> or changed later via the web UI (Settings).</p>
+    <table>
+      <thead>
+        <tr><th>Variable</th><th>Description</th><th>Default</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>SECRET_KEY</code></td><td>Flask secret key</td><td><code>change-this</code></td></tr>
+        <tr><td><code>REDIS_HOST</code></td><td>Redis hostname</td><td><code>localhost</code></td></tr>
+        <tr><td><code>REDIS_PORT</code></td><td>Redis port</td><td><code>6379</code></td></tr>
+        <tr><td><code>OLLAMA_HOST</code></td><td>Ollama API URL</td><td><code>http://localhost:11434</code></td></tr>
+        <tr><td><code>OLLAMA_MODEL</code></td><td>Ollama model name</td><td><code>llama3.2</code></td></tr>
+        <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td>Telegram bot token</td><td>—</td></tr>
+        <tr><td><code>TELEGRAM_CHAT_ID</code></td><td>Telegram chat ID</td><td>—</td></tr>
+        <tr><td><code>LOG_RETENTION_HOURS</code></td><td>Recent log retention (not a full history)</td><td><code>2</code></td></tr>
+        <tr><td><code>ANALYSIS_INTERVAL_SECONDS</code></td><td>Auto-analysis interval</td><td><code>300</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- RSYSLOG -->
+  <section id="rsyslog">
+    <h2>Rsyslog Configuration</h2>
+    <p>On each Linux server create <code>/etc/rsyslog.d/99-logaimonitor.conf</code>:</p>
+    <pre><code># Forward all logs via UDP
+*.* @logaimonitor-host:5514
+
+# Or via TCP (more reliable)
+*.* @@logaimonitor-host:5515</code></pre>
+    <pre><code>sudo systemctl restart rsyslog</code></pre>
+
+    <h3>Forward Specific Logs Only</h3>
+    <pre><code># Auth / security only
+auth,authpriv.* @logaimonitor-host:5514
+
+# Errors and above
+*.err @logaimonitor-host:5514
+
+# Kernel messages
+kern.* @logaimonitor-host:5514</code></pre>
+
+    <h3>Test with logger</h3>
+    <pre><code>logger -n logaimonitor-host -P 5514 -d "Test message from server"</code></pre>
+  </section>
+
+  <!-- DOCKER EXTERNAL HOSTS -->
+  <section id="docker-external">
+    <h2>Docker Logs from External Hosts</h2>
+
+    <h3>Option 1 — Docker Syslog Logging Driver (Recommended)</h3>
+    <pre><code>docker run -d \
+  --log-driver=syslog \
+  --log-opt syslog-address=udp://logaimonitor-host:5514 \
+  --log-opt tag="{{.Name}}" \
+  your-image</code></pre>
+    <p>Or set as default in <code>/etc/docker/daemon.json</code>:</p>
+    <pre><code>{
+  "log-driver": "syslog",
+  "log-opts": {
+    "syslog-address": "udp://logaimonitor-host:5514",
+    "tag": "{{.Name}}"
+  }
+}</code></pre>
+    <pre><code>sudo systemctl restart docker</code></pre>
+
+    <h3>Option 2 — Docker Remote API</h3>
+    <p>Edit <code>/etc/docker/daemon.json</code> on the remote host:</p>
+    <pre><code>{ "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"] }</code></pre>
+    <p>Then set <code>DOCKER_SOCKET=tcp://remote-host:2375</code> on LogAI Monitor.</p>
+    <div class="warn-box">⚠️ This exposes Docker without authentication. Use TLS certificates in production.</div>
+
+    <h3>Option 3 — rsyslog on Remote Host</h3>
+    <pre><code># /etc/rsyslog.d/99-docker-forward.conf
+module(load="imjournal")
+:programname, startswith, "docker" @logaimonitor-host:5514</code></pre>
+  </section>
+
+  <!-- TELEGRAM -->
+  <section id="telegram">
+    <h2>Telegram Notifications</h2>
+    <ol>
+      <li>Create a bot with <a href="https://t.me/BotFather">@BotFather</a> and copy the bot token.</li>
+      <li>Send a message to your bot.</li>
+      <li>Get your chat ID from <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>.</li>
+      <li>Set <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code> via environment variables or the Settings page.</li>
+    </ol>
+  </section>
+
+  <!-- USAGE -->
+  <section id="usage">
+    <h2>Usage</h2>
+
+    <h3>Creating Filters</h3>
+    <ol>
+      <li>Go to <strong>Filters</strong> in the sidebar and click <strong>Create Filter</strong>.</li>
+      <li>Configure conditions: Severity, Source Contains, Message Contains, or Message Regex.</li>
+      <li>Enable Telegram notification if desired, then save.</li>
+    </ol>
+
+    <h3>AI Analysis</h3>
+    <ol>
+      <li>Go to <strong>AI Analysis</strong> and click <strong>Analyze Recent Logs</strong> for a batch analysis.</li>
+      <li>Use the <strong>Chat Assistant</strong> to ask questions about your logs.</li>
+      <li>Click any log entry → <strong>Analyze with AI</strong> for a detailed breakdown.</li>
+    </ol>
+
+    <h3>Docker Containers</h3>
+    <p>Go to <strong>Docker Containers</strong> in the sidebar to view all running containers, browse their logs, and trigger AI analysis per container.</p>
+  </section>
+
+  <!-- API -->
+  <section id="api">
+    <h2>API Reference</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/api/logs</code></td><td>Get logs with filtering</td></tr>
+        <tr><td>GET</td><td><code>/api/logs/&lt;id&gt;</code></td><td>Get single log</td></tr>
+        <tr><td>POST</td><td><code>/api/logs/ingest</code></td><td>Ingest log via HTTP</td></tr>
+        <tr><td>GET</td><td><code>/api/filters</code></td><td>List all filters</td></tr>
+        <tr><td>POST</td><td><code>/api/filters</code></td><td>Create filter</td></tr>
+        <tr><td>PUT</td><td><code>/api/filters/&lt;id&gt;</code></td><td>Update filter</td></tr>
+        <tr><td>DELETE</td><td><code>/api/filters/&lt;id&gt;</code></td><td>Delete filter</td></tr>
+        <tr><td>GET</td><td><code>/api/alerts</code></td><td>List alerts</td></tr>
+        <tr><td>POST</td><td><code>/api/alerts/&lt;id&gt;/acknowledge</code></td><td>Acknowledge alert</td></tr>
+        <tr><td>GET</td><td><code>/api/ollama/status</code></td><td>Check Ollama status</td></tr>
+        <tr><td>POST</td><td><code>/api/ollama/analyze</code></td><td>Analyze logs</td></tr>
+        <tr><td>POST</td><td><code>/api/ollama/chat</code></td><td>Chat with AI</td></tr>
+        <tr><td>GET</td><td><code>/api/settings</code></td><td>Get settings</td></tr>
+        <tr><td>POST</td><td><code>/api/settings</code></td><td>Save settings</td></tr>
+        <tr><td>POST</td><td><code>/api/telegram/test</code></td><td>Test Telegram connection</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- PORTS -->
+  <section id="ports">
+    <h2>Ports</h2>
+    <table>
+      <thead><tr><th>Port</th><th>Protocol</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>5059</td><td>TCP</td><td>Web interface</td></tr>
+        <tr><td>5514</td><td>UDP</td><td>Syslog (UDP)</td></tr>
+        <tr><td>5515</td><td>TCP</td><td>Syslog (TCP)</td></tr>
+      </tbody>
+    </table>
+
+    <h2 style="margin-top:2rem;">Tech Stack</h2>
+    <div class="stack-pills">
+      <span class="pill">Python · Flask · Flask-SocketIO</span>
+      <span class="pill">Redis</span>
+      <span class="pill">Ollama (local LLM)</span>
+      <span class="pill">Telegram Bot API</span>
+      <span class="pill">Vue.js 3</span>
+      <span class="pill">Docker · Docker Compose</span>
+    </div>
+  </section>
+
+  <!-- TROUBLESHOOTING -->
+  <section id="troubleshooting">
+    <h2>Troubleshooting</h2>
+
+    <h3>Logs not appearing</h3>
+    <ul>
+      <li>Check rsyslog configuration on source servers.</li>
+      <li>Verify network connectivity on ports 5514/5515.</li>
+      <li>Check firewall rules.</li>
+      <li>View container logs: <code>docker compose logs -f logaimonitor</code></li>
+    </ul>
+
+    <h3>Ollama not working</h3>
+    <ul>
+      <li>Verify Ollama is running: <code>curl http://localhost:11434/api/tags</code></li>
+      <li>Check the model is pulled: <code>ollama list</code></li>
+      <li>Verify the <code>OLLAMA_HOST</code> environment variable.</li>
+    </ul>
+
+    <h3>Telegram not sending messages</h3>
+    <ul>
+      <li>Verify the bot token is correct.</li>
+      <li>Check the chat ID — you must start a conversation with the bot first.</li>
+      <li>Use <strong>Test Connection</strong> in Settings.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <span>Copyright © 2026 Fotios Tsiadimos — GPL-3.0 License</span>
+  <span>
+    <a href="https://hub.docker.com/r/ftsiadimos/logradaraiq">Docker Hub</a> ·
+    <a href="https://github.com/ftsiadimos/logaimonitor">GitHub</a> ·
+    <a href="https://ollama.ai">Ollama</a>
+  </span>
+</footer>
+
+</body>
+</html>
