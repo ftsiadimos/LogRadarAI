@@ -121,7 +121,7 @@ function initSocket() {
     
     state.socket.on('new_alert', (alert) => {
         addNewAlert(alert);
-        showToast('New Alert', `${alert.filter_name}: ${alert.message.substring(0, 50)}...`, 'warning');
+        //showToast('New Alert', `${alert.filter_name}: ${alert.message.substring(0, 50)}...`, 'warning');
     });
     
     state.socket.on('analysis_complete', (data) => {
