@@ -4,23 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="LogRadarAI — Log monitoring and analysis using local AI, rsyslog, Docker, and Telegram alerts." />
+  <meta name="theme-color" content="#0969da" />
   <title>LogRadarAI — LogAI Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
     :root {
-      --bg: #0d1117;
-      --bg2: #161b22;
-      --border: #30363d;
-      --text: #f8f9fa;
-      --muted: #c9d1d9;
+      --bg: #f6f8fa;
+      --bg2: #ffffff;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --muted: #656d76;
       --dim: #8b949e;
-      --accent: #58a6ff;
-      --accent2: #3fb950;
-      --warn: #d29922;
+      --accent: #0969da;
+      --accent2: #1a7f37;
+      --warn: #9a6700;
     }
 
     html { scroll-behavior: smooth; }
+
+    /* ── ANIMATIONS ──────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.6; }
+    }
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+    .animate-in {
+      animation: fadeUp 0.6s ease both;
+    }
+    .animate-in:nth-child(1) { animation-delay: 0.05s; }
+    .animate-in:nth-child(2) { animation-delay: 0.1s; }
+    .animate-in:nth-child(3) { animation-delay: 0.15s; }
+    .animate-in:nth-child(4) { animation-delay: 0.2s; }
+    .animate-in:nth-child(5) { animation-delay: 0.25s; }
+    .animate-in:nth-child(6) { animation-delay: 0.3s; }
+    .animate-in:nth-child(7) { animation-delay: 0.35s; }
+    .animate-in:nth-child(8) { animation-delay: 0.4s; }
+    .animate-in:nth-child(9) { animation-delay: 0.45s; }
 
     body {
       margin: 0;
@@ -28,6 +63,8 @@
       color: var(--text);
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     /* ── NAV ─────────────────────────────────────── */
@@ -35,10 +72,14 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(13,17,23,0.92);
-      backdrop-filter: blur(8px);
+      background: rgba(246,248,250,0.88);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       padding: 0 1.5rem;
+      transition: box-shadow 0.3s ease;
+    }
+    nav.scrolled {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
     nav ul {
       display: flex;
@@ -51,18 +92,65 @@
     nav a {
       color: var(--muted);
       text-decoration: none;
-      font-size: 0.88rem;
-      padding: 0.35rem 0.7rem;
-      border-radius: 6px;
-      transition: background 0.15s, color 0.15s;
+      font-size: 0.85rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
     }
-    nav a:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 1px;
+      transition: all 0.25s ease;
+      transform: translateX(-50%);
+    }
+    nav a:hover {
+      background: rgba(9,105,218,0.08);
+      color: var(--accent);
+    }
+    nav a:hover::after {
+      width: 60%;
+    }
+    nav a.active {
+      background: rgba(9,105,218,0.1);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    nav a.active::after {
+      width: 60%;
+    }
 
     /* ── HERO ────────────────────────────────────── */
     header {
       max-width: 960px;
       margin: 0 auto;
-      padding: 3.5rem 1.5rem 2rem;
+      padding: 4rem 1.5rem 2.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+    }
+    .hero-glow {
+      position: absolute;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(9,105,218,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: -1;
     }
     .hero-label {
       display: inline-block;
@@ -77,6 +165,12 @@
       font-size: clamp(2.2rem, 5vw, 3.75rem);
       letter-spacing: -0.04em;
       line-height: 1.1;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 6s ease infinite;
     }
     .version {
       display: inline-block;
@@ -115,21 +209,27 @@
       margin-top: 1.5rem;
     }
     .btn {
-      display: inline-block;
-      padding: 0.6rem 1.2rem;
-      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.35rem;
+      border-radius: 10px;
       font-size: 0.95rem;
       font-weight: 600;
       text-decoration: none;
-      transition: opacity 0.15s;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
     }
-    .btn:hover { opacity: 0.85; text-decoration: none; }
-    .btn-primary { background: var(--accent); color: #0d1117; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-decoration: none; }
+    .btn:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+    .btn-primary { background: var(--accent); color: #ffffff; }
+    .btn-primary:hover { background: #0858c0; }
     .btn-secondary {
-      background: transparent;
+      background: var(--bg2);
       border: 1px solid var(--border);
-      color: var(--muted);
+      color: var(--text);
     }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ── MAIN CONTENT ────────────────────────────── */
     main {
@@ -138,9 +238,19 @@
       padding: 0 1.5rem 4rem;
     }
     section {
-      margin-top: 2.5rem;
-      padding-top: 1.5rem;
+      margin-top: 3rem;
+      padding-top: 1.75rem;
       border-top: 1px solid var(--border);
+    }
+    section:first-of-type { border-top: none; margin-top: 3rem; }
+    section h2::after {
+      content: '';
+      display: block;
+      width: 48px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+      margin-top: 0.75rem;
     }
     h2 {
       margin: 0 0 1rem;
@@ -159,23 +269,44 @@
     ul, ol { margin: 0.5rem 0 0.5rem 1.4rem; color: var(--muted); }
     li { margin-bottom: 0.3rem; }
     code {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 0.1em 0.4em;
+      background: rgba(9,105,218,0.08);
+      border: 1px solid rgba(9,105,218,0.15);
+      border-radius: 5px;
+      padding: 0.15em 0.45em;
       font-size: 0.88em;
-      color: #e3b341;
+      color: #0550ae;
+      font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
     }
     pre {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 1.1rem 1.25rem;
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      color: #cdd6f4;
+      padding: 1.25rem 1.35rem;
       overflow-x: auto;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      line-height: 1.55;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      line-height: 1.6;
       margin: 0.75rem 0;
+      position: relative;
+      font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    }
+    pre::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      background: linear-gradient(to bottom, #313244, transparent);
+      border-radius: 12px 12px 0 0;
+      pointer-events: none;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
     }
     pre code {
       background: none;
@@ -185,10 +316,11 @@
       font-size: inherit;
     }
     .warn-box {
-      background: rgba(210,153,34,0.1);
-      border: 1px solid rgba(210,153,34,0.35);
+      background: rgba(180,130,40,0.08);
+      border: 1px solid rgba(180,130,40,0.25);
+      border-left: 4px solid var(--warn);
       border-radius: 8px;
-      padding: 0.75rem 1rem;
+      padding: 0.85rem 1.1rem;
       color: var(--warn);
       font-size: 0.92rem;
       margin: 0.75rem 0;
@@ -204,18 +336,38 @@
     .feature-card {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.1rem 1.25rem;
+      border-radius: 14px;
+      padding: 1.25rem 1.35rem;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .feature-card .icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
-    .feature-card h3 { margin: 0 0 0.3rem; font-size: 1rem; color: var(--text); }
-    .feature-card p { margin: 0; font-size: 0.9rem; }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .feature-card:hover {
+      border-color: rgba(9,105,218,0.3);
+      box-shadow: 0 4px 16px rgba(9,105,218,0.08);
+      transform: translateY(-2px);
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card .icon { font-size: 1.6rem; margin-bottom: 0.5rem; animation: float 3s ease-in-out infinite; }
+    .feature-card h3 { margin: 0 0 0.35rem; font-size: 1.05rem; color: var(--text); font-weight: 600; }
+    .feature-card p { margin: 0; font-size: 0.88rem; line-height: 1.55; }
 
     /* ── SCREENSHOTS ─────────────────────────────── */
     .screenshots {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+      gap: 1.25rem;
       margin-top: 0.75rem;
     }
     @media (max-width: 640px) { .screenshots { grid-template-columns: 1fr; } }
@@ -223,31 +375,44 @@
       margin: 0;
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .screenshots figure:hover {
+      border-color: rgba(9,105,218,0.3);
+      box-shadow: 0 6px 20px rgba(9,105,218,0.1);
+      transform: translateY(-2px);
     }
     .screenshots img {
       width: 100%;
       display: block;
+      transition: transform 0.3s ease;
+    }
+    .screenshots figure:hover img {
+      transform: scale(1.02);
     }
     .screenshots figcaption {
-      padding: 0.6rem 0.9rem;
+      padding: 0.7rem 0.9rem;
       font-size: 0.85rem;
       color: var(--dim);
       text-align: center;
+      border-top: 1px solid var(--border);
+      background: rgba(9,105,218,0.03);
     }
 
     /* ── ARCHITECTURE ────────────────────────────── */
     .arch-diagram {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem;
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 12px;
+      padding: 1.35rem;
       overflow-x: auto;
-      font-size: 0.88rem;
-      color: #c9d1d9;
+      font-size: 0.82rem;
+      color: #cdd6f4;
       white-space: pre;
-      font-family: "Courier New", Courier, monospace;
+      font-family: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+      line-height: 1.5;
     }
 
     /* ── PORTS TABLE ─────────────────────────────── */
@@ -255,22 +420,25 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 0.75rem;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
     }
     th {
-      background: var(--bg2);
+      background: rgba(9,105,218,0.06);
       color: var(--text);
       font-weight: 600;
       text-align: left;
-      padding: 0.7rem 1rem;
-      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      border: none;
     }
     td {
-      padding: 0.65rem 1rem;
-      border: 1px solid var(--border);
+      padding: 0.7rem 1rem;
+      border-top: 1px solid var(--border);
       color: var(--muted);
     }
-    tr:hover td { background: rgba(255,255,255,0.02); }
+    tr:hover td { background: rgba(9,105,218,0.04); }
 
     /* ── TECH STACK PILLS ────────────────────────── */
     .stack-pills {
@@ -280,26 +448,65 @@
       margin-top: 0.75rem;
     }
     .pill {
-      background: rgba(255,255,255,0.05);
+      background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 0.3rem 0.85rem;
-      font-size: 0.88rem;
+      padding: 0.35rem 0.95rem;
+      font-size: 0.85rem;
       color: var(--muted);
+      transition: all 0.2s ease;
+    }
+    .pill:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 2px 8px rgba(9,105,218,0.1);
     }
 
     /* ── FOOTER ──────────────────────────────────── */
     footer {
       max-width: 960px;
       margin: 0 auto;
-      padding: 2rem 1.5rem;
+      padding: 2.5rem 1.5rem;
       border-top: 1px solid var(--border);
       color: var(--dim);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       gap: 0.5rem;
+    }
+    footer a { color: var(--accent); }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── BACK TO TOP ───────────────────────────── */
+    .back-to-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(9,105,218,0.3);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      z-index: 99;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .back-to-top:hover {
+      background: #0858c0;
+      box-shadow: 0 6px 16px rgba(9,105,218,0.4);
     }
 
     @media (max-width: 600px) {
@@ -312,25 +519,55 @@
 
 <nav>
   <ul>
-    <li><a href="#features">Features</a></li>
-    <li><a href="#screenshots">Screenshots</a></li>
-    <li><a href="#architecture">Architecture</a></li>
-    <li><a href="#quickstart">Quick Start</a></li>
-    <li><a href="#configuration">Configuration</a></li>
-    <li><a href="#rsyslog">Rsyslog</a></li>
-    <li><a href="#docker-external">Docker</a></li>
-    <li><a href="#telegram">Telegram</a></li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#api">API</a></li>
-    <li><a href="#ports">Ports</a></li>
-    <li><a href="#troubleshooting">Troubleshooting</a></li>
+    <li><a href="#features">✨ Features</a></li>
+    <li><a href="#screenshots">📸 Screenshots</a></li>
+    <li><a href="#architecture">🏗️ Architecture</a></li>
+    <li><a href="#quickstart">🚀 Quick Start</a></li>
+    <li><a href="#configuration">⚙️ Configuration</a></li>
+    <li><a href="#rsyslog">📡 Rsyslog</a></li>
+    <li><a href="#docker-external">🐳 Docker</a></li>
+    <li><a href="#telegram">💬 Telegram</a></li>
+    <li><a href="#usage">📖 Usage</a></li>
+    <li><a href="#api">🔌 API</a></li>
+    <li><a href="#ports">🔌 Ports</a></li>
+    <li><a href="#troubleshooting">🔧 Troubleshooting</a></li>
   </ul>
 </nav>
 
+<script>
+  // Scroll-spy: highlight active nav link
+  (function() {
+    const sections = document.querySelectorAll('section[id]');
+    const links = document.querySelectorAll('nav a');
+    const nav = document.querySelector('nav');
+    if (!sections.length || !links.length) return;
+
+    // Scroll shadow on nav
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          nav.classList.toggle('scrolled', window.scrollY > 10);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + entry.target.id));
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    sections.forEach(s => observer.observe(s));
+  })();
+</script>
+
 <header>
-  <span class="hero-label">🛡️ Open Source · GPL-3.0</span>
-  <h1>LogRadarAI <span class="version">v2.2.2</span></h1>
-  <p class="lead">A powerful log monitoring and analysis application that collects logs from Linux servers (via rsyslog) and Docker containers, analyzes them using local AI (Ollama), and sends intelligent alerts via Telegram.</p>
+  <h1>LogRadarAI <span class="version">v2.2.3</span></h1>
+  <p class="lead">Collect, analyze, and alert on logs from Linux servers and Docker containers — powered by local AI (Ollama) and delivered via Telegram.</p>
   <p class="note">LogRadarAI focuses on <strong>recent logs</strong> for real-time analysis and alerting — it is not designed as a permanent log archive.</p>
 
   <div class="badge-row">
@@ -338,14 +575,14 @@
     <img src="https://img.shields.io/badge/flask-2.x-green.svg" alt="Flask 2.x">
     <img src="https://img.shields.io/badge/vue.js-3.x-brightgreen.svg" alt="Vue.js 3">
     <img src="https://img.shields.io/badge/license-GPL--3.0-orange.svg" alt="License GPL-3.0">
-    <a href="https://hub.docker.com/r/ftsiadimos/logradaraiq"><img src="https://img.shields.io/docker/pulls/ftsiadimos/logradaraiq?style=flat-square&logo=docker" alt="Docker Pulls"></a>
-    <a href="https://github.com/users/ftsiadimos/packages/container/package/LogRadarAI"><img src="https://img.shields.io/badge/ghcr.io-available-brightgreen.svg" alt="GHCR Available"></a>
+    <img src="https://img.shields.io/docker/pulls/ftsiadimos/logradaraiq?style=flat-square&logo=docker" alt="Docker Pulls">
+    <img src="https://img.shields.io/badge/ghcr.io-available-brightgreen.svg" alt="GHCR Available">
   </div>
 
-  <div class="cta-row">
-    <a class="btn btn-primary" href="https://hub.docker.com/r/ftsiadimos/logradaraiq">Docker Hub</a>
-    <a class="btn btn-secondary" href="https://github.com/ftsiadimos/LogRadarAI">GitHub</a>
-    <a class="btn btn-secondary" href="#quickstart">Quick Start ↓</a>
+  <div class="cta-row" style="justify-content: center; margin-top: 1.75rem;">
+    <a class="btn btn-primary" href="https://hub.docker.com/r/ftsiadimos/logradaraiq">🐳 Docker Hub</a>
+    <a class="btn btn-secondary" href="https://github.com/ftsiadimos/LogRadarAI">⭐ GitHub</a>
+    <a class="btn btn-secondary" href="#quickstart">🚀 Quick Start</a>
   </div>
 </header>
 
@@ -355,37 +592,37 @@
   <section id="features">
     <h2>Features</h2>
     <div class="features-grid">
-      <div class="feature-card">
+      <div class="feature-card animate-in">
         <div class="icon">📊</div>
-        <h3>Dashboard</h3>
-        <p>Real-time overview of log statistics and system health.</p>
+        <h3>Real-time Dashboard</h3>
+        <p>Monitor log statistics, system health, and alert status at a glance with an interactive dashboard.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card animate-in">
         <div class="icon">📝</div>
-        <h3>Log Collection</h3>
-        <p>Collect logs from rsyslog (UDP/TCP) and Docker containers.</p>
+        <h3>Multi-source Collection</h3>
+        <p>Collect logs from rsyslog (UDP/TCP) and Docker containers in a unified interface.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card animate-in">
         <div class="icon">🤖</div>
-        <h3>AI Analysis</h3>
-        <p>Analyze logs using a local Ollama LLM for intelligent insights.</p>
+        <h3>Local AI Analysis</h3>
+        <p>Analyze logs using Ollama LLMs for intelligent insights, pattern detection, and automated troubleshooting.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card animate-in">
         <div class="icon">🔔</div>
         <h3>Smart Alerts</h3>
-        <p>Create filters to detect patterns and receive Telegram notifications.</p>
+        <p>Create custom filters to detect patterns and receive instant Telegram notifications.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card animate-in">
         <div class="icon">🐳</div>
         <h3>Docker Integration</h3>
-        <p>Auto-discover and monitor Docker container logs.</p>
+        <p>Auto-discover and monitor Docker container logs with per-container AI analysis.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card animate-in">
         <div class="icon">💬</div>
-        <h3>AI Chat</h3>
-        <p>Interactive chat assistant for real-time log troubleshooting.</p>
+        <h3>AI Chat Assistant</h3>
+        <p>Ask questions about your logs in natural language and get AI-powered troubleshooting guidance.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card animate-in">
         <div class="icon">🎨</div>
         <h3>Modern UI</h3>
         <p>Clean, responsive interface inspired by oVirt/Foreman. Offline-capable — no CDN required.</p>
@@ -396,16 +633,17 @@
   <!-- SCREENSHOTS -->
   <section id="screenshots">
     <h2>Screenshots</h2>
+    <p>LogRadarAI features a modern, responsive interface with both light and dark themes.</p>
     <div class="screenshots">
       <figure>
         <a href="https://github.com/ftsiadimos/LogRadarAI/raw/main/mis/image.webp" target="_blank">
-          <img src="https://github.com/ftsiadimos/LogRadarAI/raw/main/mis/image.webp" alt="Dashboard — Lite Theme" loading="lazy" />
+          <img src="https://github.com/ftsiadimos/LogRadarAI/raw/main/mis/image.webp" alt="Dashboard — Light Theme" loading="lazy" />
         </a>
-        <figcaption>AI Analyzer — Lite Theme</figcaption>
+        <figcaption>Dashboard — Light Theme</figcaption>
       </figure>
       <figure>
         <a href="https://github.com/ftsiadimos/LogRadarAI/raw/main/mis/image1.webp" target="_blank">
-          <img src="https://github.com/ftsiadimos/LogRadarAI/raw/main/mis/image1.webp" alt="AI Troubleshooter — Dark Theme" loading="lazy" />
+          <img src="https://github.com/ftsiadimos/LogRadarAI/raw/main/mis/image1.webp" alt="AI Analyzer — Dark Theme" loading="lazy" />
         </a>
         <figcaption>AI Analyzer — Dark Theme</figcaption>
       </figure>
@@ -415,8 +653,8 @@
   <!-- ARCHITECTURE -->
   <section id="architecture">
     <h2>Architecture</h2>
-    <div class="arch-diagram">
-┌─────────────────┐     ┌─────────────────┐
+    <p>LogRadarAI collects logs from multiple sources, processes them through a central monitor, and leverages local AI for intelligent analysis.</p>
+    <div class="arch-diagram">┌─────────────────┐     ┌─────────────────┐
 │  Linux Servers  │───▶│   Syslog UDP    │
 │   (rsyslog)     │     │   Port 5514     │
 └─────────────────┘     └────────┬────────┘
@@ -436,7 +674,7 @@
   <section id="quickstart">
     <h2>Quick Start</h2>
 
-    <h3>Docker Compose (Recommended)</h3>
+    <h3>🐳 Docker Compose (Recommended)</h3>
     <pre><code>git clone https://github.com/ftsiadimos/logaimonitor.git
 cd logaimonitor
 cp docker-compose.example.yml docker-compose.yml
@@ -449,7 +687,7 @@ docker compose up -d</code></pre>
     </div>
     <p>Open <a href="http://localhost:5059">http://localhost:5059</a>.</p>
 
-    <h3>Manual Installation</h3>
+    <h3>📦 Manual Installation</h3>
     <pre><code>pip install -r requirements.txt
 
 # Start Redis
@@ -546,6 +784,7 @@ module(load="imjournal")
   <!-- TELEGRAM -->
   <section id="telegram">
     <h2>Telegram Notifications</h2>
+    <p>Set up Telegram alerts in four simple steps:</p>
     <ol>
       <li>Create a bot with <a href="https://t.me/BotFather">@BotFather</a> and copy the bot token.</li>
       <li>Send a message to your bot.</li>
@@ -579,24 +818,25 @@ module(load="imjournal")
   <!-- API -->
   <section id="api">
     <h2>API Reference</h2>
+    <p>LogRadarAI exposes a RESTful API for programmatic access. All endpoints require authentication.</p>
     <table>
       <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
       <tbody>
-        <tr><td>GET</td><td><code>/api/logs</code></td><td>Get logs with filtering</td></tr>
-        <tr><td>GET</td><td><code>/api/logs/&lt;id&gt;</code></td><td>Get single log</td></tr>
-        <tr><td>POST</td><td><code>/api/logs/ingest</code></td><td>Ingest log via HTTP</td></tr>
-        <tr><td>GET</td><td><code>/api/filters</code></td><td>List all filters</td></tr>
-        <tr><td>POST</td><td><code>/api/filters</code></td><td>Create filter</td></tr>
-        <tr><td>PUT</td><td><code>/api/filters/&lt;id&gt;</code></td><td>Update filter</td></tr>
-        <tr><td>DELETE</td><td><code>/api/filters/&lt;id&gt;</code></td><td>Delete filter</td></tr>
-        <tr><td>GET</td><td><code>/api/alerts</code></td><td>List alerts</td></tr>
-        <tr><td>POST</td><td><code>/api/alerts/&lt;id&gt;/acknowledge</code></td><td>Acknowledge alert</td></tr>
-        <tr><td>GET</td><td><code>/api/ollama/status</code></td><td>Check Ollama status</td></tr>
-        <tr><td>POST</td><td><code>/api/ollama/analyze</code></td><td>Analyze logs</td></tr>
-        <tr><td>POST</td><td><code>/api/ollama/chat</code></td><td>Chat with AI</td></tr>
-        <tr><td>GET</td><td><code>/api/settings</code></td><td>Get settings</td></tr>
-        <tr><td>POST</td><td><code>/api/settings</code></td><td>Save settings</td></tr>
-        <tr><td>POST</td><td><code>/api/telegram/test</code></td><td>Test Telegram connection</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/logs</code></td><td>Get logs with filtering</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/logs/&lt;id&gt;</code></td><td>Get single log</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/logs/ingest</code></td><td>Ingest log via HTTP</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/filters</code></td><td>List all filters</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/filters</code></td><td>Create filter</td></tr>
+        <tr><td><code>PUT</code></td><td><code>/api/filters/&lt;id&gt;</code></td><td>Update filter</td></tr>
+        <tr><td><code>DELETE</code></td><td><code>/api/filters/&lt;id&gt;</code></td><td>Delete filter</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/alerts</code></td><td>List alerts</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/alerts/&lt;id&gt;/acknowledge</code></td><td>Acknowledge alert</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/ollama/status</code></td><td>Check Ollama status</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/ollama/analyze</code></td><td>Analyze logs</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/ollama/chat</code></td><td>Chat with AI</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/settings</code></td><td>Get settings</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/settings</code></td><td>Save settings</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/telegram/test</code></td><td>Test Telegram connection</td></tr>
       </tbody>
     </table>
   </section>
@@ -607,20 +847,20 @@ module(load="imjournal")
     <table>
       <thead><tr><th>Port</th><th>Protocol</th><th>Description</th></tr></thead>
       <tbody>
-        <tr><td>5059</td><td>TCP</td><td>Web interface</td></tr>
-        <tr><td>5514</td><td>UDP</td><td>Syslog (UDP)</td></tr>
-        <tr><td>5515</td><td>TCP</td><td>Syslog (TCP)</td></tr>
+        <tr><td><code>5059</code></td><td>TCP</td><td>Web interface</td></tr>
+        <tr><td><code>5514</code></td><td>UDP</td><td>Syslog (UDP)</td></tr>
+        <tr><td><code>5515</code></td><td>TCP</td><td>Syslog (TCP)</td></tr>
       </tbody>
     </table>
 
-    <h2 style="margin-top:2rem;">Tech Stack</h2>
+    <h2 style="margin-top:2.5rem;">Tech Stack</h2>
     <div class="stack-pills">
-      <span class="pill">Python · Flask · Flask-SocketIO</span>
-      <span class="pill">Redis</span>
-      <span class="pill">Ollama (local LLM)</span>
-      <span class="pill">Telegram Bot API</span>
-      <span class="pill">Vue.js 3</span>
-      <span class="pill">Docker · Docker Compose</span>
+      <span class="pill">🐍 Python · Flask · Flask-SocketIO</span>
+      <span class="pill">🔴 Redis</span>
+      <span class="pill">🤖 Ollama (local LLM)</span>
+      <span class="pill">💬 Telegram Bot API</span>
+      <span class="pill">💚 Vue.js 3</span>
+      <span class="pill">🐳 Docker · Docker Compose</span>
     </div>
   </section>
 
@@ -628,7 +868,7 @@ module(load="imjournal")
   <section id="troubleshooting">
     <h2>Troubleshooting</h2>
 
-    <h3>Logs not appearing</h3>
+    <h3>📋 Logs not appearing</h3>
     <ul>
       <li>Check rsyslog configuration on source servers.</li>
       <li>Verify network connectivity on ports 5514/5515.</li>
@@ -636,14 +876,14 @@ module(load="imjournal")
       <li>View container logs: <code>docker compose logs -f logaimonitor</code></li>
     </ul>
 
-    <h3>Ollama not working</h3>
+    <h3>🤖 Ollama not working</h3>
     <ul>
       <li>Verify Ollama is running: <code>curl http://localhost:11434/api/tags</code></li>
       <li>Check the model is pulled: <code>ollama list</code></li>
       <li>Verify the <code>OLLAMA_HOST</code> environment variable.</li>
     </ul>
 
-    <h3>Telegram not sending messages</h3>
+    <h3>💬 Telegram not sending messages</h3>
     <ul>
       <li>Verify the bot token is correct.</li>
       <li>Check the chat ID — you must start a conversation with the bot first.</li>
@@ -657,10 +897,23 @@ module(load="imjournal")
   <span>Copyright © 2026 Fotios Tsiadimos — GPL-3.0 License</span>
   <span>
     <a href="https://hub.docker.com/r/ftsiadimos/logradaraiq">Docker Hub</a> ·
-    <a href="https://github.com/ftsiadimos/logaimonitor">GitHub</a> ·
+    <a href="https://github.com/ftsiadimos/LogRadarAI">GitHub</a> ·
     <a href="https://ollama.ai">Ollama</a>
   </span>
 </footer>
+
+<button class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<script>
+  // Show/hide back-to-top button
+  (function() {
+    const btn = document.querySelector('.back-to-top');
+    if (!btn) return;
+    window.addEventListener('scroll', () => {
+      btn.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
+  })();
+</script>
 
 </body>
 </html>
